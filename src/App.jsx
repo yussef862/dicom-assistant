@@ -25,7 +25,7 @@ export default function App() {
     setFileName(fileName);
 
     try {
-      const res = await fetch("/api/analyze", {
+      const res = await fetch("/.netlify/functions/analyze", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ imageBase64: base64, mimeType }),
