@@ -1,20 +1,19 @@
-export default async (req, context) => {
-    if (req.method !== "POST") {
-        return new Response(JSON.stringify({ error: "Method not allowed" }), {
-            status: 405,
-            headers: { "Content-Type": "application/json" },
-        });
+exports.handler = async (event) => {
+    if (event.httpMethod !== "POST") {
+        return {
+            statusCode: 405,
+            body: JSON.stringify({ error: "Method not allowed" }),
+        };
     }
 
     try {
-        const body = await req.json();
-        const { imageBase64, mimeType } = body;
+        const { imageBase64, mimeType } = JSON.parse(event.body);
 
         if (!imageBase64 || !mimeType) {
-            return new Response(JSON.stringify({ error: "No image provided" }), {
-                status: 400,
-                headers: { "Content-Type": "application/json" },
-            });
+            return {
+                statusCode: 400,
+                body: JSON.stringify({ error: "No image provided" }),
+            };
         }
 
         const groqResponse = await fetch(
@@ -23,7 +22,7 @@ export default async (req, context) => {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
-                    Authorization: `Bearer ${Deno.env.get("GROQ_API_KEY")}`,
+                    Authorization: `Bearer ${process.env.GROQ_API_KEY}`,
                 },
                 body: JSON.stringify({
                     model: "meta-llama/llama-4-scout-17b-16e-instruct",
@@ -68,18 +67,15 @@ export default async (req, context) => {
             parsed = { error: "Failed to parse AI response", raw };
         }
 
-        return new Response(JSON.stringify(parsed), {
-            status: 200,
+        return {
+            statusCode: 200,
             headers: { "Content-Type": "application/json" },
-        });
+            body: JSON.stringify(parsed),
+        };
     } catch (err) {
-        return new Response(JSON.stringify({ error: err.message }), {
-            status: 500,
-            headers: { "Content-Type": "application/json" },
-        });
+        return {
+            statusCode: 500,
+            body: JSON.stringify({ error: err.message }),
+        };
     }
-};
-
-export const config = {
-    path: "/api/analyze",
 };
